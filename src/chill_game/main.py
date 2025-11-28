@@ -3,6 +3,7 @@
 チルい砂遊びゲーム
 """
 import pyxel
+import random
 from sand import SandSimulator
 from sea import Sea
 
@@ -18,8 +19,11 @@ class ChillBeach:
         self.beach_y = self.sky_height + self.sea_height  # 砂浜開始位置
 
         # コンポーネント
-        self.sea = Sea(self.sky_height, self.sea_height)
+        self.sea = Sea(self.sky_height, self.sea_height, self.beach_y)
         self.sand = SandSimulator(self.beach_y)
+
+        # 波が戻った時に貝殻を置くフラグ
+        self.wave_was_returning = False
 
         # ゲーム開始
         pyxel.run(self.update, self.draw)
@@ -38,12 +42,28 @@ class ChillBeach:
             mx, my = pyxel.mouse_x, pyxel.mouse_y
             # 複数粒落とす
             for _ in range(3):
-                import random
                 offset_x = random.randint(-2, 2)
                 self.sand.add_sand(mx + offset_x, my)
 
         # 更新
         self.sea.update()
+
+        # 波が砂を流す処理
+        wave_active, wave_y = self.sea.get_wave_zone()
+        if wave_active:
+            self.sand.wave_wash(wave_y, self.sea.big_wave_returning)
+
+            # 波が戻り始めた瞬間に貝殻を置く
+            if self.sea.big_wave_returning and not self.wave_was_returning:
+                if random.random() < 0.7:  # 70%の確率で貝殻
+                    shell_x = random.randint(10, 118)
+                    shell_y = random.randint(self.beach_y + 2, self.beach_y + 18)
+                    self.sand.add_shell(shell_x, shell_y)
+
+            self.wave_was_returning = self.sea.big_wave_returning
+        else:
+            self.wave_was_returning = False
+
         self.sand.update()
 
     def draw(self):
@@ -65,6 +85,13 @@ class ChillBeach:
 
         # 砂浜の背景（ベースの砂色）
         pyxel.rect(0, self.beach_y, 128, 128 - self.beach_y, 15)  # ベージュ
+
+        # 波が来てる部分は水色で塗る
+        wave_active, wave_y = self.sea.get_wave_zone()
+        if wave_active:
+            wave_height = wave_y - self.beach_y
+            if wave_height > 0:
+                pyxel.rect(0, self.beach_y, 128, wave_height, 12)  # 明るい青
 
         # 砂
         self.sand.draw()

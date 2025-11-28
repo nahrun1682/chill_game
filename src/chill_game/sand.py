@@ -10,6 +10,30 @@ class SandParticle:
         self.color = color  # 15: 薄いベージュ, 10: 黄色
 
 
+class Shell:
+    """貝殻"""
+    def __init__(self, x: int, y: int):
+        self.x = x
+        self.y = y
+        # 貝殻の種類（見た目のバリエーション）
+        self.shell_type = random.randint(0, 2)
+
+    def draw(self):
+        # シンプルなドット絵の貝殻
+        if self.shell_type == 0:
+            # 巻貝風
+            pyxel.pset(self.x, self.y, 7)      # 白
+            pyxel.pset(self.x + 1, self.y, 6)  # グレー
+        elif self.shell_type == 1:
+            # 二枚貝風
+            pyxel.pset(self.x, self.y, 6)      # グレー
+            pyxel.pset(self.x + 1, self.y, 7)  # 白
+        else:
+            # ピンク貝
+            pyxel.pset(self.x, self.y, 14)     # ピンク
+            pyxel.pset(self.x + 1, self.y, 7)  # 白
+
+
 class SandSimulator:
     def __init__(self, beach_y: int):
         self.beach_y = beach_y  # 砂浜の開始Y座標
@@ -18,6 +42,9 @@ class SandSimulator:
         self.grid: dict[tuple[int, int], SandParticle] = {}
         self.colors = [15, 10, 9]  # ベージュ、黄色、オレンジ
         self.current_color_idx = 0
+
+        # 貝殻
+        self.shells: list[Shell] = []
 
     @property
     def current_color(self) -> int:
@@ -37,6 +64,45 @@ class SandSimulator:
         particle = SandParticle(x, y, self.current_color)
         self.particles.append(particle)
         self.grid[(x, y)] = particle
+
+    def add_shell(self, x: int, y: int):
+        """貝殻を追加"""
+        # 重ならないようにチェック
+        for shell in self.shells:
+            if abs(shell.x - x) < 3 and abs(shell.y - y) < 3:
+                return
+        self.shells.append(Shell(x, y))
+
+    def wave_wash(self, wave_y: int, returning: bool):
+        """波が砂を流す"""
+        particles_to_move = []
+
+        for p in self.particles:
+            # 波の位置より上（海側）にある砂だけ影響
+            if p.y <= wave_y and p.y >= self.beach_y:
+                if returning:
+                    # 波が戻るとき：砂を海側（上）に引っ張る
+                    if random.random() < 0.1:  # 10%の確率
+                        particles_to_move.append((p, 0, -1))
+                else:
+                    # 波が来るとき：砂を横と下に押す
+                    if random.random() < 0.05:  # 5%の確率
+                        dx = random.choice([-1, 1])
+                        particles_to_move.append((p, dx, 1))
+
+        for p, dx, dy in particles_to_move:
+            new_x = max(0, min(pyxel.width - 1, p.x + dx))
+            new_y = max(self.beach_y, min(pyxel.height - 1, p.y + dy))
+            if (new_x, new_y) not in self.grid:
+                self._move_particle(p, new_x, new_y)
+
+    def remove_sand_at_top(self):
+        """海に入った砂を消す"""
+        to_remove = [p for p in self.particles if p.y < self.beach_y]
+        for p in to_remove:
+            if (p.x, p.y) in self.grid:
+                del self.grid[(p.x, p.y)]
+            self.particles.remove(p)
 
     def update(self):
         """砂の物理更新"""
@@ -64,6 +130,9 @@ class SandSimulator:
                 if random.random() < 0.5:
                     self._move_particle(p, below_right[0], below_right[1])
 
+        # 海に入った砂を消す
+        self.remove_sand_at_top()
+
     def _move_particle(self, p: SandParticle, new_x: int, new_y: int):
         """パーティクルを移動"""
         del self.grid[(p.x, p.y)]
@@ -75,3 +144,7 @@ class SandSimulator:
         """砂を描画"""
         for p in self.particles:
             pyxel.pset(p.x, p.y, p.color)
+
+        # 貝殻を描画
+        for shell in self.shells:
+            shell.draw()
