@@ -14,23 +14,26 @@ class Sea:
         # 大波（砂を流す波）
         self.big_wave_active = False
         self.big_wave_y = 0  # 波の現在位置
-        self.big_wave_max_y = beach_y + 20  # 波が届く最大位置
+        self.big_wave_max_y = beach_y + 35  # 波が届く最大位置（もっと奥まで）
         self.big_wave_timer = 0
-        self.big_wave_interval = 180  # 約6秒ごと（30fps）
-        self.big_wave_speed = 0.5
+        self.big_wave_interval = 120  # 約4秒ごと（30fps）
+        self.big_wave_speed = 0.8  # より速く
         self.big_wave_returning = False  # 波が戻ってるか
+        self.big_wave_just_started = False  # 波が来た瞬間フラグ（音用）
 
     def update(self):
         # 波のアニメーション用オフセット
         self.wave_offset += 0.05
 
         # 大波タイマー
+        self.big_wave_just_started = False
         self.big_wave_timer += 1
         if not self.big_wave_active and self.big_wave_timer >= self.big_wave_interval:
             self.big_wave_active = True
             self.big_wave_y = self.beach_y
             self.big_wave_returning = False
             self.big_wave_timer = 0
+            self.big_wave_just_started = True  # 音再生用フラグ
 
         # 大波の動き
         if self.big_wave_active:
@@ -66,9 +69,14 @@ class Sea:
         # 大波の描画
         if self.big_wave_active:
             wave_y = int(self.big_wave_y)
-            # 波の泡（白いライン）
+            # 波の泡（白いラインを複数）
             for x in range(pyxel.width):
                 wobble = int(math.sin(x * 0.3 + self.wave_offset * 2) * 2)
+                # メインの泡ライン（太め）
                 pyxel.pset(x, wave_y + wobble, 7)  # 白
-                if random.random() < 0.3:
+                pyxel.pset(x, wave_y + wobble + 1, 7)  # 白（2段目）
+                # 泡の飛沫
+                if random.random() < 0.5:
                     pyxel.pset(x, wave_y + wobble - 1, 12)  # 明るい青
+                if random.random() < 0.3:
+                    pyxel.pset(x, wave_y + wobble - 2, 7)  # 白の飛沫

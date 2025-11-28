@@ -81,14 +81,18 @@ class SandSimulator:
             # 波の位置より上（海側）にある砂だけ影響
             if p.y <= wave_y and p.y >= self.beach_y:
                 if returning:
-                    # 波が戻るとき：砂を海側（上）に引っ張る
-                    if random.random() < 0.1:  # 10%の確率
-                        particles_to_move.append((p, 0, -1))
+                    # 波が戻るとき：砂を海側（上）に強く引っ張る
+                    if random.random() < 0.4:  # 40%の確率
+                        # 1-3ピクセル動かす
+                        dy = -random.randint(1, 2)
+                        dx = random.randint(-1, 1)
+                        particles_to_move.append((p, dx, dy))
                 else:
-                    # 波が来るとき：砂を横と下に押す
-                    if random.random() < 0.05:  # 5%の確率
-                        dx = random.choice([-1, 1])
-                        particles_to_move.append((p, dx, 1))
+                    # 波が来るとき：砂を横に散らす
+                    if random.random() < 0.3:  # 30%の確率
+                        dx = random.choice([-2, -1, 1, 2])
+                        dy = random.randint(0, 1)
+                        particles_to_move.append((p, dx, dy))
 
         for p, dx, dy in particles_to_move:
             new_x = max(0, min(pyxel.width - 1, p.x + dx))

@@ -13,6 +13,9 @@ class ChillBeach:
         # 画面サイズ 128x128 (レトロ感)
         pyxel.init(128, 128, title="Chill Beach", fps=30)
 
+        # サウンド設定
+        self._setup_sounds()
+
         # レイアウト
         self.sky_height = 40
         self.sea_height = 25
@@ -25,8 +28,44 @@ class ChillBeach:
         # 波が戻った時に貝殻を置くフラグ
         self.wave_was_returning = False
 
+        # 砂の音タイマー
+        self.sand_sound_timer = 0
+
+        # 環境音開始
+        pyxel.play(0, 0, loop=True)
+
         # ゲーム開始
         pyxel.run(self.update, self.draw)
+
+    def _setup_sounds(self):
+        """サウンドを設定"""
+        # Sound 0: 波の環境音（ループ、ノイズでザザー）
+        # 低めのノイズを長く
+        pyxel.sounds[0].set(
+            notes="c1c1d1d1c1c1d1d1e1e1d1d1c1c1d1d1",  # 低い音程
+            tones="nnnnnnnnnnnnnnnn",  # ノイズ
+            volumes="32112233321122333211223332112233",  # 緩やかに上下
+            effects="nnnnnnnnnnnnnnnn",
+            speed=30  # ゆっくり
+        )
+
+        # Sound 1: 大波（ザバーン！）
+        pyxel.sounds[1].set(
+            notes="c2d2e2f2g2a2b2c3",  # 上昇する音程
+            tones="nnnnnnnn",  # ノイズ
+            volumes="77665544",  # フェードアウト
+            effects="nnnnnnnn",
+            speed=8  # 速め
+        )
+
+        # Sound 2: 砂を落とす音（サラサラ）
+        pyxel.sounds[2].set(
+            notes="g3f3e3d3",  # 下降
+            tones="nnnn",  # ノイズ
+            volumes="3210",  # すぐフェードアウト
+            effects="nnnn",
+            speed=15  # 短い
+        )
 
     def update(self):
         # ESCで終了
@@ -45,8 +84,20 @@ class ChillBeach:
                 offset_x = random.randint(-2, 2)
                 self.sand.add_sand(mx + offset_x, my)
 
+            # 砂の音（連続再生しすぎないように）
+            self.sand_sound_timer += 1
+            if self.sand_sound_timer >= 5:  # 5フレームごと
+                pyxel.play(2, 2)
+                self.sand_sound_timer = 0
+        else:
+            self.sand_sound_timer = 0
+
         # 更新
         self.sea.update()
+
+        # 大波が来た瞬間に音
+        if self.sea.big_wave_just_started:
+            pyxel.play(1, 1)
 
         # 波が砂を流す処理
         wave_active, wave_y = self.sea.get_wave_zone()
