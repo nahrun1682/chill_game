@@ -1,0 +1,2 @@
+ちるいpythonのゲーム
+claude codeのテストって感じ
