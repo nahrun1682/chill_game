@@ -14,7 +14,7 @@ class Sea:
         # 大波（砂を流す波）
         self.big_wave_active = False
         self.big_wave_y = 0  # 波の現在位置
-        self.big_wave_max_y = beach_y + 35  # 波が届く最大位置（もっと奥まで）
+        self.big_wave_max_y = beach_y + 50  # 波が届く最大位置（画面の下の方まで）
         self.big_wave_timer = 0
         self.big_wave_interval = 120  # 約4秒ごと（30fps）
         self.big_wave_speed = 0.8  # より速く

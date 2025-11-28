@@ -13,9 +13,6 @@ class ChillBeach:
         # 画面サイズ 128x128 (レトロ感)
         pyxel.init(128, 128, title="Chill Beach", fps=30)
 
-        # サウンド設定
-        self._setup_sounds()
-
         # レイアウト
         self.sky_height = 40
         self.sea_height = 25
@@ -25,47 +22,37 @@ class ChillBeach:
         self.sea = Sea(self.sky_height, self.sea_height, self.beach_y)
         self.sand = SandSimulator(self.beach_y)
 
+        # 音の準備
+        self._init_sound()
+
+        # BGM再生開始
+        pyxel.playm(0, loop=True)
+
         # 波が戻った時に貝殻を置くフラグ
         self.wave_was_returning = False
-
-        # 砂の音タイマー
-        self.sand_sound_timer = 0
-
-        # 環境音開始
-        pyxel.play(0, 0, loop=True)
 
         # ゲーム開始
         pyxel.run(self.update, self.draw)
 
-    def _setup_sounds(self):
-        """サウンドを設定"""
-        # Sound 0: 波の環境音（ループ、ノイズでザザー）
-        # 低めのノイズを長く
-        pyxel.sounds[0].set(
-            notes="c1c1d1d1c1c1d1d1e1e1d1d1c1c1d1d1",  # 低い音程
-            tones="nnnnnnnnnnnnnnnn",  # ノイズ
-            volumes="32112233321122333211223332112233",  # 緩やかに上下
-            effects="nnnnnnnnnnnnnnnn",
-            speed=30  # ゆっくり
+    def _init_sound(self):
+        # BGM: ゆったりとしたメロディ (Track 0)
+        pyxel.sound(0).set(
+            "c3e3g3b3 c4b3g3e3 a2c3e3g3 a3g3e3c3",
+            "t", "4", "n", 24
         )
+        # BGM: ベース音 (Track 1)
+        pyxel.sound(1).set(
+            "c2 r r r f1 r r r",
+            "s", "3", "f", 96
+        )
+        # Music 0 にトラック0と1を割り当て
+        pyxel.music(0).set([0], [1], [], [])
 
-        # Sound 1: 大波（ザバーン！）
-        pyxel.sounds[1].set(
-            notes="c2d2e2f2g2a2b2c3",  # 上昇する音程
-            tones="nnnnnnnn",  # ノイズ
-            volumes="77665544",  # フェードアウト
-            effects="nnnnnnnn",
-            speed=8  # 速め
-        )
+        # SE: 砂を置く音 (Sound 2) - ノイズを使って砂っぽい音に
+        pyxel.sound(2).set("c2", "n", "2", "f", 3)
 
-        # Sound 2: 砂を落とす音（サラサラ）
-        pyxel.sounds[2].set(
-            notes="g3f3e3d3",  # 下降
-            tones="nnnn",  # ノイズ
-            volumes="3210",  # すぐフェードアウト
-            effects="nnnn",
-            speed=15  # 短い
-        )
+        # SE: 大波の音 (Sound 3)
+        pyxel.sound(3).set("c2d2e2f2g2", "n", "76543", "n", 8)
 
     def update(self):
         # ESCで終了
@@ -79,25 +66,22 @@ class ChillBeach:
         # マウスクリック/ドラッグで砂を落とす
         if pyxel.btn(pyxel.MOUSE_BUTTON_LEFT):
             mx, my = pyxel.mouse_x, pyxel.mouse_y
+
+            # 音を鳴らす (連続しすぎないように少し間引く)
+            if pyxel.frame_count % 4 == 0:
+                pyxel.play(2, 2)
+
             # 複数粒落とす
             for _ in range(3):
                 offset_x = random.randint(-2, 2)
                 self.sand.add_sand(mx + offset_x, my)
-
-            # 砂の音（連続再生しすぎないように）
-            self.sand_sound_timer += 1
-            if self.sand_sound_timer >= 5:  # 5フレームごと
-                pyxel.play(2, 2)
-                self.sand_sound_timer = 0
-        else:
-            self.sand_sound_timer = 0
 
         # 更新
         self.sea.update()
 
         # 大波が来た瞬間に音
         if self.sea.big_wave_just_started:
-            pyxel.play(1, 1)
+            pyxel.play(3, 3)
 
         # 波が砂を流す処理
         wave_active, wave_y = self.sea.get_wave_zone()
