@@ -1,6 +1,7 @@
 """砂の物理シミュレーション"""
 import pyxel
 import random
+from config import config
 
 
 class SandParticle:
@@ -76,20 +77,21 @@ class SandSimulator:
     def wave_wash(self, wave_y: int, returning: bool):
         """波が砂を流す"""
         particles_to_move = []
+        power = config.get_wave_power_ratio()
 
         for p in self.particles:
             # 波の位置より上（海側）にある砂だけ影響
             if p.y <= wave_y and p.y >= self.beach_y:
                 if returning:
                     # 波が戻るとき：砂を海側（上）に強く引っ張る
-                    if random.random() < 0.5:  # 50%の確率
+                    if random.random() < power:
                         # 1-2ピクセル動かす
                         dy = -random.randint(1, 2)
                         dx = random.randint(-1, 1)
                         particles_to_move.append((p, dx, dy))
                 else:
                     # 波が来るとき：砂を横に散らす
-                    if random.random() < 0.4:  # 40%の確率
+                    if random.random() < power * 0.8:
                         dx = random.choice([-2, -1, 1, 2])
                         dy = random.randint(0, 1)
                         particles_to_move.append((p, dx, dy))

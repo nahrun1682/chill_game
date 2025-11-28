@@ -6,6 +6,8 @@ import pyxel
 import random
 from sand import SandSimulator
 from sea import Sea
+from config import config
+from settings import SettingsScreen
 
 
 class ChillBeach:
@@ -21,11 +23,13 @@ class ChillBeach:
         # コンポーネント
         self.sea = Sea(self.sky_height, self.sea_height, self.beach_y)
         self.sand = SandSimulator(self.beach_y)
+        self.settings = SettingsScreen()
 
         # 音の準備
         self._init_sound()
 
         # BGM再生開始
+        self.bgm_playing = True
         pyxel.playm(0, loop=True)
 
         # 波が戻った時に貝殻を置くフラグ
@@ -54,8 +58,33 @@ class ChillBeach:
         # SE: 大波の音 (Sound 3)
         pyxel.sound(3).set("c2d2e2f2g2", "n", "76543", "n", 8)
 
+    def _update_sound_settings(self):
+        """音の設定を反映"""
+        # BGM
+        if config.bgm_on and not self.bgm_playing:
+            pyxel.playm(0, loop=True)
+            self.bgm_playing = True
+        elif not config.bgm_on and self.bgm_playing:
+            pyxel.stop(0)
+            pyxel.stop(1)
+            self.bgm_playing = False
+
     def update(self):
-        # ESCで終了
+        # 設定画面が開いている場合
+        if self.settings.is_active:
+            self.settings.update()
+            self._update_sound_settings()
+            # 設定を波に反映
+            self.sea.big_wave_interval = config.wave_interval
+            self.sea.big_wave_max_y = self.beach_y + config.wave_reach
+            return
+
+        # Sキーで設定画面を開く
+        if pyxel.btnp(pyxel.KEY_S):
+            self.settings.open()
+            return
+
+        # Qで終了
         if pyxel.btnp(pyxel.KEY_Q):
             pyxel.quit()
 
@@ -68,11 +97,11 @@ class ChillBeach:
             mx, my = pyxel.mouse_x, pyxel.mouse_y
 
             # 音を鳴らす (連続しすぎないように少し間引く)
-            if pyxel.frame_count % 4 == 0:
+            if config.se_on and pyxel.frame_count % 4 == 0:
                 pyxel.play(2, 2)
 
-            # 複数粒落とす
-            for _ in range(3):
+            # 設定に応じた量の砂を落とす
+            for _ in range(config.sand_amount):
                 offset_x = random.randint(-2, 2)
                 self.sand.add_sand(mx + offset_x, my)
 
@@ -80,7 +109,7 @@ class ChillBeach:
         self.sea.update()
 
         # 大波が来た瞬間に音
-        if self.sea.big_wave_just_started:
+        if self.sea.big_wave_just_started and config.se_on:
             pyxel.play(3, 3)
 
         # 波が砂を流す処理
@@ -133,7 +162,11 @@ class ChillBeach:
 
         # UI
         pyxel.text(2, 2, "CHILL BEACH", 7)
-        pyxel.text(2, 120, "[SPACE]:COLOR [Q]:QUIT", 7)
+        if not self.settings.is_active:
+            pyxel.text(2, 120, "[S]:SETTINGS [SPACE]:COLOR [Q]:QUIT", 6)
+
+        # 設定画面（オーバーレイ）
+        self.settings.draw()
 
 
 if __name__ == "__main__":
