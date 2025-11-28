@@ -1,0 +1,9 @@
+[project]
+name = "chill-game"
+version = "0.1.0"
+description = "Chill Beach - A relaxing sand simulator game"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pyxel>=2.5.10",
+]
