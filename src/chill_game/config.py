@@ -27,6 +27,12 @@ class Config:
         self.sand_amount_max = 10
         self.sand_amount_step = 1
 
+        # 水の設定
+        self.water_amount = 3  # 1フレームあたりの水粒数
+        self.water_amount_min = 1
+        self.water_amount_max = 10
+        self.water_amount_step = 1
+
         # 音の設定
         self.bgm_on = True
         self.se_on = True

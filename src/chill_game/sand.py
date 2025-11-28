@@ -110,8 +110,11 @@ class SandSimulator:
                 del self.grid[(p.x, p.y)]
             self.particles.remove(p)
 
-    def update(self):
+    def update(self, water_grid: dict = None):
         """砂の物理更新"""
+        if water_grid is None:
+            water_grid = {}
+
         # 下から上に処理（下の砂が先に動く）
         sorted_particles = sorted(self.particles, key=lambda p: -p.y)
 
@@ -124,8 +127,9 @@ class SandSimulator:
             below_left = (p.x - 1, p.y + 1)
             below_right = (p.x + 1, p.y + 1)
 
+            # 砂は他の砂の上には乗れないが、水の上には落ちる
             if below not in self.grid and below[1] < pyxel.height:
-                # 真下に落ちる
+                # 真下に落ちる（水の中も通過できる）
                 self._move_particle(p, below[0], below[1])
             elif below_left not in self.grid and below_left[0] >= 0 and below_left[1] < pyxel.height:
                 # 左下に落ちる

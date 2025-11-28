@@ -12,6 +12,7 @@ class SettingsScreen:
             {"key": "wave_reach", "label": "WAVE REACH", "unit": "px", "is_toggle": False},
             {"key": "wave_power", "label": "WAVE POWER", "unit": "%", "is_toggle": False},
             {"key": "sand_amount", "label": "SAND AMOUNT", "unit": "", "is_toggle": False},
+            {"key": "water_amount", "label": "WATER AMOUNT", "unit": "", "is_toggle": False},
             {"key": "bgm_on", "label": "BGM", "unit": "", "is_toggle": True},
             {"key": "se_on", "label": "SE", "unit": "", "is_toggle": True},
         ]

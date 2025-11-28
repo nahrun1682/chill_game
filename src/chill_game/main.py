@@ -6,6 +6,7 @@ import pyxel
 import random
 from sand import SandSimulator
 from sea import Sea
+from water import WaterSimulator
 from config import config
 from settings import SettingsScreen
 
@@ -23,6 +24,7 @@ class ChillBeach:
         # コンポーネント
         self.sea = Sea(self.sky_height, self.sea_height, self.beach_y)
         self.sand = SandSimulator(self.beach_y)
+        self.water = WaterSimulator(self.beach_y)
         self.settings = SettingsScreen()
 
         # 音の準備
@@ -105,6 +107,15 @@ class ChillBeach:
                 offset_x = random.randint(-2, 2)
                 self.sand.add_sand(mx + offset_x, my)
 
+        # 右クリックで水を落とす
+        if pyxel.btn(pyxel.MOUSE_BUTTON_RIGHT):
+            mx, my = pyxel.mouse_x, pyxel.mouse_y
+
+            # 設定に応じた量の水を落とす
+            for _ in range(config.water_amount):
+                offset_x = random.randint(-2, 2)
+                self.water.add_water(mx + offset_x, my)
+
         # 更新
         self.sea.update()
 
@@ -124,11 +135,18 @@ class ChillBeach:
                     shell_y = random.randint(self.beach_y + 2, self.beach_y + 18)
                     self.sand.add_shell(shell_x, shell_y)
 
+                # 波が戻るときに少し水を残す（波打ち際）
+                for _ in range(random.randint(5, 15)):
+                    water_x = random.randint(5, 123)
+                    water_y = random.randint(self.beach_y, self.beach_y + 15)
+                    self.water.add_water(water_x, water_y)
+
             self.wave_was_returning = self.sea.big_wave_returning
         else:
             self.wave_was_returning = False
 
-        self.sand.update()
+        self.sand.update(self.water.grid)
+        self.water.update(self.sand.grid)
 
     def draw(self):
         # 空（グラデーション風）
@@ -159,6 +177,9 @@ class ChillBeach:
 
         # 砂
         self.sand.draw()
+
+        # 水
+        self.water.draw()
 
         # UI
         pyxel.text(2, 2, "CHILL BEACH", 7)
