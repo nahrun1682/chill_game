@@ -22,11 +22,34 @@ class ChillBeach:
         self.sea = Sea(self.sky_height, self.sea_height, self.beach_y)
         self.sand = SandSimulator(self.beach_y)
 
+        # 音の準備
+        self._init_sound()
+        
+        # BGM再生開始
+        pyxel.playm(0, loop=True)
+
         # 波が戻った時に貝殻を置くフラグ
         self.wave_was_returning = False
 
         # ゲーム開始
         pyxel.run(self.update, self.draw)
+
+    def _init_sound(self):
+        # BGM: ゆったりとしたメロディ (Track 0)
+        pyxel.sound(0).set(
+            "c3e3g3b3 c4b3g3e3 a2c3e3g3 a3g3e3c3", 
+            "t", "4", "n", 24
+        )
+        # BGM: ベース音 (Track 1)
+        pyxel.sound(1).set(
+            "c2 r r r f1 r r r", 
+            "s", "3", "f", 96
+        )
+        # Music 0 にトラック0と1を割り当て
+        pyxel.music(0).set([0], [1], [], [])
+
+        # SE: 砂を置く音 (Sound 2) - ノイズを使って砂っぽい音に
+        pyxel.sound(2).set("c2", "n", "2", "f", 3)
 
     def update(self):
         # ESCで終了
@@ -40,6 +63,11 @@ class ChillBeach:
         # マウスクリック/ドラッグで砂を落とす
         if pyxel.btn(pyxel.MOUSE_BUTTON_LEFT):
             mx, my = pyxel.mouse_x, pyxel.mouse_y
+
+            # 音を鳴らす (連続しすぎないように少し間引く)
+            if pyxel.frame_count % 4 == 0:
+                pyxel.play(2, 2)
+
             # 複数粒落とす
             for _ in range(3):
                 offset_x = random.randint(-2, 2)

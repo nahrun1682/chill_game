@@ -82,11 +82,11 @@ class SandSimulator:
             if p.y <= wave_y and p.y >= self.beach_y:
                 if returning:
                     # 波が戻るとき：砂を海側（上）に引っ張る
-                    if random.random() < 0.1:  # 10%の確率
+                    if random.random() < 0.8:  # 80%の確率
                         particles_to_move.append((p, 0, -1))
                 else:
                     # 波が来るとき：砂を横と下に押す
-                    if random.random() < 0.05:  # 5%の確率
+                    if random.random() < 0.8:  # 80%の確率
                         dx = random.choice([-1, 1])
                         particles_to_move.append((p, dx, 1))
 
